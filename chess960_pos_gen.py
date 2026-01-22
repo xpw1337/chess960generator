@@ -1,7 +1,5 @@
 import random
 
-import random
-
 def makeBoard():
     # row variable contains row 1
     row = ["e"] * 8
