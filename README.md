@@ -26,6 +26,8 @@ No external dependencies; uses only the standard library.
 python chess960_pos_gen.py
 ```
 
+This prints two random Chess960 boards.
+
 Or import the `Board` class and create boards as objects:
 
 ```python
@@ -45,6 +47,34 @@ classic = Board(["rook", "knight", "bishop", "queen", "king", "bishop", "knight"
 ```
 
 Passing an invalid back rank raises a `ValueError`. You can also check a back rank yourself with `Board.is_valid_back_rank(row)`.
+
+## Checking the Generator
+
+`checker.py` verifies that the generator only produces valid boards:
+
+```bash
+python checker.py
+```
+
+This generates 1000 boards and checks each one, printing `All 1000 generated boards are valid.` on success. If a bad board turns up, it prints the board and what is wrong with it.
+
+You can also use the checker in your own code:
+
+```python
+from chess960_pos_gen import Board
+from checker import check_board, check_generator
+
+problems = check_board(Board())   # list of problems, empty if the board is valid
+check_generator(trials=5000)      # returns True if every generated board is valid
+```
+
+`check_board` checks the whole board, not just the back rank:
+
+- The board is 8×8
+- The back rank follows the Chess960 rules
+- Rows 0 and 7 match
+- Rows 1 and 6 are all pawns
+- Rows 2 to 5 are empty
 
 ## Output Format
 
