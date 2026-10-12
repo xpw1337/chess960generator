@@ -1,61 +1,80 @@
 import random
 
-def makeBoard():
-    # row variable contains row 1
-    row = ["e"] * 8
-    bishop1_posi, bishop2_posi = None, None
-    king_posi = None
-    rook1_posi, rook2_posi = None, None
-    knight1_posi, knight2_posi, queen_posi = None, None, None
 
-    # Bishops on opposite colors
-    while bishop1_posi is None or bishop1_posi % 2 != 0:
-        bishop1_posi = random.randint(0, len(row) - 1)
-    while bishop2_posi is None or bishop2_posi % 2 == 0:
-        bishop2_posi = random.randint(0, len(row) - 1)
+class Board:
+    """A Chess960 (Fischer Random Chess) starting board."""
 
-    row[bishop1_posi] = row[bishop2_posi] = "bishop"
+    EMPTY = "     "
+    PAWN = "pawns"
+    SIZE = 8
 
-    # King: must be on an empty square AND have at least one empty on both sides
-    while (
-        king_posi is None
-        or row[king_posi] != "e"
-        or row[:king_posi].count("e") == 0
-        or row[king_posi + 1 :].count("e") == 0
-    ):
-        king_posi = random.randint(0, 7)
-    row[king_posi] = "king"
+    def __init__(self, back_rank=None):
+        # Use the given back rank if provided, otherwise generate a random one
+        if back_rank is None:
+            back_rank = self.generate_back_rank()
+        elif not self.is_valid_back_rank(back_rank):
+            raise ValueError(f"Invalid Chess960 back rank: {back_rank}")
 
-    # Rook to the left of the king on an empty square
-    while rook1_posi is None or rook1_posi >= king_posi or row[rook1_posi] != "e":
-        rook1_posi = random.randint(0, king_posi - 1)
+        self.back_rank = list(back_rank)
+        self.grid = self._build_grid()
 
-    # Rook to the right of the king on an empty square
-    while rook2_posi is None or rook2_posi <= king_posi or row[rook2_posi] != "e":
-        rook2_posi = random.randint(king_posi + 1, len(row) - 1)
+    @staticmethod
+    def generate_back_rank():
+        row = [None] * Board.SIZE
 
-    # Correct assignment: place BOTH rooks on the board
-    row[rook1_posi] = row[rook2_posi] = "rook"
+        # Bishops on opposite colors
+        row[random.choice(range(0, Board.SIZE, 2))] = "bishop"
+        row[random.choice(range(1, Board.SIZE, 2))] = "bishop"
 
-    # Knights on empty squares
-    while knight1_posi is None or row[knight1_posi] != "e":
-        knight1_posi = random.randint(0, len(row) - 1)
-    row[knight1_posi] = "knight"
+        # Queen and knights on any three remaining squares
+        for piece in ("queen", "knight", "knight"):
+            empty = [i for i, square in enumerate(row) if square is None]
+            row[random.choice(empty)] = piece
 
-    while knight2_posi is None or row[knight2_posi] != "e":
-        knight2_posi = random.randint(0, len(row) - 1)
-    row[knight2_posi] = "knight"
+        # The last three empty squares go rook, king, rook so the king is between the rooks
+        empty = [i for i, square in enumerate(row) if square is None]
+        for i, piece in zip(empty, ("rook", "king", "rook")):
+            row[i] = piece
 
-    # Queen on an empty square
-    while queen_posi is None or row[queen_posi] != "e":
-        queen_posi = random.randint(0, len(row) - 1)
-    row[queen_posi] = "queen"
+        return row
 
-    # Build full board
-    pawns_row = ["pawns"] * 8
-    empty_row = ["     "] * 8
-    return [row, pawns_row, empty_row, empty_row, empty_row, empty_row, pawns_row, row]
+    @staticmethod
+    def is_valid_back_rank(row):
+        if len(row) != Board.SIZE:
+            return False
+        if sorted(row) != sorted(["rook", "knight", "bishop", "queen", "king", "bishop", "knight", "rook"]):
+            return False
+
+        # Bishops on opposite colors
+        bishops = [i for i, piece in enumerate(row) if piece == "bishop"]
+        if bishops[0] % 2 == bishops[1] % 2:
+            return False
+
+        # King between the rooks
+        rooks = [i for i, piece in enumerate(row) if piece == "rook"]
+        return rooks[0] < row.index("king") < rooks[1]
+
+    def _build_grid(self):
+        pawns_row = [self.PAWN] * self.SIZE
+        return (
+            [list(self.back_rank), list(pawns_row)]
+            + [[self.EMPTY] * self.SIZE for _ in range(4)]
+            + [list(pawns_row), list(self.back_rank)]
+        )
+
+    def __iter__(self):
+        return iter(self.grid)
+
+    def __eq__(self, other):
+        return isinstance(other, Board) and self.back_rank == other.back_rank
+
+    def __repr__(self):
+        return f"Board({self.back_rank!r})"
+
+    def __str__(self):
+        return "\n".join(str(row) for row in self.grid)
 
 
-for i in makeBoard():
-    print(i)
+if __name__ == "__main__":
+    board = Board()
+    print(board)

@@ -26,19 +26,29 @@ No external dependencies—uses only the standard library.
 python chess960_pos_gen.py
 ```
 
-Or import and use the `makeBoard()` function in your own code:
+Or import the `Board` class and create boards as objects:
 
 ```python
-from chess960_pos_gen import makeBoard
+from chess960_pos_gen import Board
 
-board = makeBoard()
-for row in board:
+board = Board()            # random Chess960 position
+print(board)
+
+for row in board:          # boards are iterable, row by row
     print(row)
+
+print(board.back_rank)     # just the back rank
+print(board.grid)          # the full 8x8 list
+
+# Build a board from a specific back rank (validated against Chess960 rules)
+classic = Board(["rook", "knight", "bishop", "queen", "king", "bishop", "knight", "rook"])
 ```
+
+Passing an invalid back rank raises a `ValueError`. You can also check a back rank yourself with `Board.is_valid_back_rank(row)`.
 
 ## Output Format
 
-Returns an 8×8 list representing the board:
+`board.grid` is an 8×8 list representing the board:
 
 - **Row 0 & 7** — Back ranks (`king`, `queen`, `rook`, `bishop`, `knight`)
 - **Row 1 & 6** — Pawn ranks
