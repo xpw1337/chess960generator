@@ -77,4 +77,6 @@ class Board:
 
 if __name__ == "__main__":
     board = Board()
+    board2 = Board()
     print(board)
+    print(board2)
